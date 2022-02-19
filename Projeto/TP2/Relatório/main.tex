@@ -1,0 +1,1049 @@
+\documentclass[11pt,a4paper]{report}
+\usepackage[portuges]{babel}
+\usepackage[utf8]{inputenc} % define o encoding usado texto fonte (input)--usual "utf8" ou "latin1
+\usepackage{graphicx} %permite incluir graficos, tabelas, figuras
+\usepackage{subcaption}
+\usepackage[title]{appendix}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{multicol}
+\usepackage{indentfirst}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{enumerate}
+\usepackage[shortlabels]{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+
+
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=black,
+    }
+    
+    
+    
+\usepackage{bera}% optional: just to have a nice mono-spaced font
+
+\definecolor{eclipseStrings}{RGB}{42,0.0,255}
+\definecolor{eclipseKeywords}{RGB}{127,0,85}
+
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily,
+    commentstyle=\color{eclipseStrings}, % style of comment
+    stringstyle=\color{eclipseKeywords}, % style of strings
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{white}, %only if you like
+    string=[s]{"}{"},
+    comment=[l]{:\ "},
+    morecomment=[l]{:"},
+    literate=
+        *{0}{{{\color{numb}0}}}{1}
+         {1}{{{\color{numb}1}}}{1}
+         {2}{{{\color{numb}2}}}{1}
+         {3}{{{\color{numb}3}}}{1}
+         {4}{{{\color{numb}4}}}{1}
+         {5}{{{\color{numb}5}}}{1}
+         {6}{{{\color{numb}6}}}{1}
+         {7}{{{\color{numb}7}}}{1}
+         {8}{{{\color{numb}8}}}{1}
+         {9}{{{\color{numb}9}}}{1}
+}
+    
+
+\lstset{ %
+  backgroundcolor=\color{white},   % choose the background color
+  basicstyle=\footnotesize,        % size of fonts used for the code
+  breaklines=true,                 % automatic line breaking only at whitespace
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  keywordstyle=\color{blue},       % keyword style
+  stringstyle=\color{mymauve},     % string literal style
+}
+
+
+
+\title{PLC - Trabalho Prático 2\\
+	\large Grupo nº15}
+
+\author{Tomás Vaz de Carvalho Campinho \\ (A91668) \and Miguel Ângelo Alves de Freitas \\ (A91635)
+         \and Pedro Alexandre Silva Gomes \\ (A91647)
+       } %autores do documento
+       
+\date{\today} %data
+
+\begin{document}
+	\begin{minipage}{0.9\linewidth}
+        \centering
+		\includegraphics[width=0.4\textwidth]{um.jpg}\par\vspace{1cm}
+		\href{https://www.uminho.pt/PT}
+		{\scshape\LARGE Universidade do Minho} \par
+		\vspace{0.6cm}
+		\href{https://lcc.di.uminho.pt}
+		{\scshape\Large Licenciatura em Ciências da Computação} \par
+		\maketitle
+		\begin{figure}[H]
+			\includegraphics[width=0.32\linewidth]{Tomas.jpg}
+			\includegraphics[width=0.32\linewidth]{miguel.png}
+			\includegraphics[width=0.32\linewidth]{pedro.jpg}
+		\end{figure}
+	\end{minipage}
+	
+	\tableofcontents
+	
+	\pagebreak
+	
+	\chapter{Introdução}
+%	
+	Este relatório, descreve o desenvolvimento do último projeto prático da Unidade Currícular de Processamento de Linguagens e Compiladores, inserida no 3ºano da Licenciatura em Ciências da Computação da Universidade do Minho.
+	
+	Este projeto consistia no desenvolver de um processador de linguagens e a criação de um compilador que gera o código para uma máquina vitual \textbf{VM}. Para que a realização do referido fosse possível, utilizamos as ferramentas \textbf{Yacc} para gerar compiladores baseados em gramáticas tradutoras, completado pelo gerador de analisadores léxicos, \textbf{Lex}, ambos versão PLY do Python.  
+	
+	\pagebreak
+	\chapter{Gramática e Compilador}
+	\section{Descrição do problema}
+	Para o nosso trabalho, foi dado como material uma série de tópicos, que permitiram definir o propósito para a criação da nossa linguagem, a qual demos o nome\textbf{\textit{ Hashi}}.
+    
+    A\textbf{\textit{ Hashi}} é uma linguagem com as variáveis declaradas no início do programa, não tem re-declarações e não utiliza variáveis não declaradas anteriormente. Caso não haja uma atribuição de valor a uma variável depois de declarada, esta fica com valor \textbf{zero}, caso seja um\textit{ inteiro}. O compilador gera o código \textit{assembly} para a máquina virtual \textbf{VM}.  
+    
+	\section{Funcionalidades da linguagem \textit{{{Hashi}}} }
+
+		\begin{itemize}
+\item\textit{declarar} variáveis atómicas do tipo inteiro, com os quais se podem realizar as habituais operações aritméticas, relacionais e lógicas.
+	     \item\textit{ efetuar} instruções algorítmicas básicas como a atribuição do valor de expressões numéricas a variáveis.
+	     \item \textit{ler} do standard input e escrever no standard output.
+         \item \textit{efetuar} instruções condicionais para controlo do fluxo de execução.
+         \item \textit{efetuar} instruções cíclicas para controlo do fluxo de execução, permitindo o seu aninhamento, implementando o ciclo\textbf{ while-do}.
+         \end{itemize}
+        Adicionalmente escolhemos a funcionalidade de:
+\begin{itemize}
+\item \textit{declarar} e manusear variáveis estruturadas do tipo \textit{array} (a 1 ou 2 dimensões) de inteiros, em relação aos quais é apenas permitida a operação de indexação (índice inteiro).
+\end{itemize}
+         
+\pagebreak
+
+\section{Expressões regulares:}
+	
+	As expressões regulares que utilizamos foram:
+    
+    \begin{lstlisting}
+        
+
+t_LBRACK = r'\['
+
+t_RBRACK = r'\]'
+
+t_INCREMENT = r'\+\+'
+
+t_DECREMENT = r'\--'
+
+t_DIVIDE = r'\/'
+
+t_MULTIPLY = r'\*'
+
+t_EQUALS = r'\='
+
+t_PLUS = r'\+'
+
+t_MODULO = r'\%'
+
+t_SEMICOLON = r'\;'
+
+t_LPARA = r'\('
+
+t_RPARA = r'\)'
+
+t_POWER = r'\^'
+
+t_COMMA = r'\,'
+
+t_GREATER = r'\>'
+
+t_LESSER = r'\<'
+
+t_GREATER_EQUAL = r'\>\='
+
+t_LESSER_EQUAL = r'\<\='
+
+t_NOT_EQUAL = r'\!\='
+
+t_DOUBLE_EQUAL = r'\=\='
+
+t_LBRACE = r'\{'
+
+t_RBRACE = r'\}'
+
+t_DOT = r'\.'
+
+t_MINUS = r'\-'
+
+
+
+t_ignore = ' \n\t'
+    \end{lstlisting}
+    \begin{itemize}
+        \item push
+        \item pop
+        \item index
+        \item slice
+        \item list
+        \item if
+        \item then
+        \item else
+        \item DO
+        \item WHILE
+        \item AND
+        \item OR
+        \item NOT
+        \item int
+        \item double
+        \item bool
+        \item char
+        \item string
+        \item ARRAY
+        \item end
+        \item False|True
+            \begin{lstlisting}
+            [a-zA-Z_][a-zA-Z_0-9]*
+            [\-]?\d+
+            [\-]?\d+\.\d+
+            "[^"]?"
+            [^"]*"
+            \end{lstlisting}
+        \item 
+        
+        
+    \end{itemize}
+
+    \section{Linguagem}
+	\subsection{\textit{\textbf{Hashi}}}
+	A linguagem \textbf{\textit{Hashi}} tem todas as características já referidas e reconhece os tipos:
+    \begin{itemize}
+    \item inteiros (\textit{int});
+\item Array de inteiros.
+    \end{itemize}
+    Para comparações utiliza os simbolos usuais:
+    \begin{itemize}
+    \item > 
+    \item < 
+    \item <= 
+\item >= 
+\item == 
+\item !=
+    \end{itemize}
+    Como operadores lógicos utiliza:
+    \begin{itemize}
+    \item \textbf{"AND"}
+\item \textbf{"OR"}
+\item \textbf{"NOT"}
+    \end{itemize}
+    
+    A \textbf{\textit{Hashi}} está definida pela seguinte \textbf{GIC}:
+    
+    \begin{lstlisting}
+Main : Program 
+    | Types Program
+
+Types: type
+    | Types type
+
+type: TYPE_INT VAR_NAME
+   | TYPE_INT VAR_NAME EQUALS INT
+   | TYPE_ARRAY VAR_NAME LBRACK INT RBRACK
+
+Program : All
+        | Program All
+
+All : Print
+    | Atrib
+    | IF cond THEN Program END
+    | IF cond THEN Program ELSE Program END
+    | DO Program WHILE cond END
+
+Atrib : VAR_NAME EQUALS Expr
+      | VAR_NAME LBRACK Expr RBRACK
+
+Expr : VAR_NAME
+     | Expr PLUS Expr
+     | Expr MINUS Expr
+     | Expr DIVIDE Expr
+     | Expr MULTIPLY Expr
+     | Expr DIVIDE Expr
+     | Expr MODULO Expr
+
+cond: VAR_NAME LESSER VAR_NAME
+    | VAR_NAME LESSER_EQUAL VAR_NAME
+    | VAR_NAME GREATER VAR_NAME
+    | VAR_NAME GREATER_EQUAL VAR_NAME
+    | VAR_NAME DOUBLE_EQUAL VAR_NAME
+    | VAR_NAME NOT_EQUAL VAR_NAME
+
+Print: TYPE_PRINT VAR_NAME
+     | TYPE_PRINT INT
+    \end{lstlisting}
+    
+    
+    
+	\pagebreak
+    
+\chapter{Codificação}
+
+\section{Problemas de implementação}
+No decorrer da realização do projeto, deparamo-nos com vários problemas na implementação do código, dos quais vários não foram solucionados. O código saltava para Syntax: error, mesmo estando a gramática toda correta. Por vezes funcionava e outras vezes voltava a não funcionar, não sabemos se pode ser do interpretador que usamos.
+
+\section{Exemplos de utilidade da linguagem}
+
+Um exemplo de como se pode usar a linguagem \textbf{\textit{ Hashi}}
+    \subsection{exemplo 1} 
+    \begin{lstlisting}[language=python,firstnumber=1]
+        int a
+        int b
+        int c = 3
+        a = b + c
+        print a
+        if b < c then a = c end
+    \end{lstlisting}
+    \subsection{exemplo 2}
+    \begin{lstlisting}[language=python,firstnumber=1]
+        int a
+        int b
+        int c = 3
+        a = b + c
+        print a
+        do b = c + c while a < c end
+    
+    \end{lstlisting}
+\newpage
+\section{Prompt}
+Para proceder à execução do nosso parser basta fazer
+
+    \begin{lstlisting}
+        python3 yacc.py inputfile.txt outfile.txt
+    \end{lstlisting}
+
+\pagebreak
+    
+    
+    
+	
+	\chapter{Conclusão}
+	Em suma, conseguimos aplicar os conhecimentos aprendidos nas aulas, no decorrer do trabalho. Percebemos como funciona o gerador \textbf{\textit{Yacc}} e \textbf{\textit{Lex}}. Adquirimos mais experiência no contacto com o \textbf{GIC} e conseguimos criar um compilador para converter a nossa linguagem \textbf{\textit{Hashi}}, em pseudo-código para a máquina virtual \textbf{VM}.
+    
+    Em conclusão, nível geral, e tendo em conta o que foi explicado nos capítulos anteriores, como grupo sabemos que nem todos os objetivos foram cumpridos e, apesar das dificuldades que fomos encontrando, tivemos sempre espírito de persistência, tendo sempre um olhar crítico a pensar no próximo passo.
+    Num próximo trabalho de compiladores, temos pensada uma nova estratégia de abordagem para ter mais sucesso, ou seja, um dos nossos erros foi começar a escrever código antes de ter a gramática muito bem definida, o que fez com que algumas partes ficassem mais confusas, dificultando a realização de outras partes.
+    
+    Acreditamos que, com a exceção dos problemas não solucionados, respondemos de forma correta ao problema apresentado pela equipa docente da disciplina.
+	
+\pagebreak
+
+    \chapter{Anexos}
+    \section{LEXER}
+    \begin{lstlisting}[language=python,firstnumber=1]
+    import ply.lex as lex
+
+import ply.yacc as yacc
+
+import sys
+
+tokens = [
+
+	'SEMICOLON',
+
+	'VAR_NAME',
+
+	'PRINT',
+
+	'COMMA',
+
+	'LPARA',
+
+	'RPARA',
+
+	'EQUALS',
+
+	# VAR TYPES
+
+	'TYPE_BOOL',
+
+	'TYPE_CHAR',
+
+	'TYPE_STRING',
+
+	'TYPE_INT',
+
+	'TYPE_DOUBLE',
+
+	'TYPE_ARRAY',
+
+	# VARIABLES
+
+	'INT',
+
+	'BOOL',
+
+	'DOUBLE',
+
+	'CHAR',
+
+	'STRING',
+
+	# NUMERICALS
+
+	'PLUS',
+
+	'MINUS',
+
+	'DIVIDE',
+
+	'MULTIPLY',
+
+	'MODULO',
+
+	'INCREMENT',
+
+	'DECREMENT',
+
+	'POWER',
+
+	#LOGIAL OPERATORS
+
+	'LESSER',
+
+	'GREATER',
+
+	'GREATER_EQUAL',
+
+	'LESSER_EQUAL',
+
+	'NOT_EQUAL',
+
+	'DOUBLE_EQUAL',
+
+	'NOT',
+
+	'AND',
+
+	'OR',
+
+	#CONDITIONALS
+
+	'IF',
+
+	'THEN',
+
+	'ELSE',
+
+	'END',
+
+	# DO WHILE
+
+	'DO',
+
+	'WHILE',
+
+	'LBRACE',
+
+	'RBRACE',
+
+	# LIST
+
+	'LIST',
+
+	'LBRACK',
+
+	'RBRACK',
+
+	'DOT',
+
+	'INDEX',
+
+	'SLICE',
+
+	'POP',
+
+	'PUSH',
+
+]
+
+
+
+
+
+t_LBRACK = r'\['
+
+t_RBRACK = r'\]'
+
+t_INCREMENT = r'\+\+'
+
+t_DECREMENT = r'\--'
+
+t_DIVIDE = r'\/'
+
+t_MULTIPLY = r'\*'
+
+t_EQUALS = r'\='
+
+t_PLUS = r'\+'
+
+t_MODULO = r'\%'
+
+t_SEMICOLON = r'\;'
+
+t_LPARA = r'\('
+
+t_RPARA = r'\)'
+
+t_POWER = r'\^'
+
+t_COMMA = r'\,'
+
+t_GREATER = r'\>'
+
+t_LESSER = r'\<'
+
+t_GREATER_EQUAL = r'\>\='
+
+t_LESSER_EQUAL = r'\<\='
+
+t_NOT_EQUAL = r'\!\='
+
+t_DOUBLE_EQUAL = r'\=\='
+
+t_LBRACE = r'\{'
+
+t_RBRACE = r'\}'
+
+t_DOT = r'\.'
+
+
+
+t_ignore = ' \n\t'
+
+
+
+def t_PUSH(t):
+
+	r'push'
+
+	t.type = 'PUSH'
+
+	return t
+
+	
+
+def t_POP(t):
+
+	r'pop'
+
+	t.type = 'POP'
+
+	return t
+
+
+
+def t_INDEX(t):
+
+	r'index'
+
+	t.type = 'INDEX'
+
+	return t
+
+
+
+def t_SLICE(t):
+
+	r'slice'
+
+	t.type = 'SLICE'
+
+	return t
+
+
+
+def t_LIST(t):
+
+	r'list'
+
+	t.type = 'LIST'
+
+	return t
+
+
+
+def t_IF(t):
+
+	r'if'
+
+	t.type = 'IF'
+
+	return t
+
+
+
+def t_ELSE(t):
+
+	r'else'
+
+	t.type = 'ELSE'
+
+	return t
+
+
+
+def t_THEN(t):
+
+	r'then'
+
+	t.type = 'THEN'
+
+	return t	
+
+
+
+def t_DO(t):
+
+	r'DO'
+
+	t.type = 'DO'
+
+	return t
+
+
+
+def t_WHILE(t):
+
+	r'WHILE'
+
+	t.type = 'WHILE'
+
+	return t
+
+
+
+def t_AND(t):
+
+	r'AND'
+
+	t.type = 'AND'
+
+	return t
+
+
+
+def t_OR(t):
+
+	r'OR'
+
+	t.type = 'OR'
+
+	return t
+
+
+
+def t_NOT(t):
+
+	r'NOT'
+
+	t.type = 'NOT'
+
+	return t
+
+
+
+def t_TYPE_PRINT(t):
+
+	r'print'
+
+	t.type = 'PRINT'
+
+	return t
+
+
+
+def t_TYPE_INT(t):
+
+	r'int'
+
+	t.type = 'TYPE_INT'
+
+	return t
+
+
+
+def t_TYPE_DOUBLE(t):
+
+	r'double'
+
+	t.type = 'TYPE_DOUBLE'
+
+	return t
+
+
+
+def t_TYPE_BOOL(t):
+
+	r'bool'
+
+	t.type = 'TYPE_BOOL'
+
+	return t
+
+
+
+def t_TYPE_CHAR(t):
+
+	r'char'
+
+	t.type = 'TYPE_CHAR'
+
+	return t
+
+
+
+def t_TYPE_STRING(t):
+
+	r'string'
+
+	t.type = 'TYPE_STRING'
+
+	return t
+
+	
+
+
+
+def t_ARRAY(t):
+
+	r'ARRAY'
+
+	t.type = 'TYPE_ARRAY'
+
+	return t
+
+
+
+def t_BOOL(t):
+
+	r'False|True'
+
+	
+
+	if t.value == 'False':
+
+		t.value = False
+
+	else:
+
+		t.value = True
+
+		
+
+	#t.value = bool(t.value)
+
+	t.type = 'BOOL'
+
+	return t
+
+
+
+def t_VAR_NAME(t):
+
+	r'[a-zA-Z_][a-zA-Z_0-9]*'
+
+	t.type = 'VAR_NAME'
+
+	return t
+
+
+
+def t_DOUBLE(t):
+
+	r'[\-]?\d+\.\d+'
+
+	t.value = float(t.value)
+
+	return t
+
+
+
+def t_END(t):
+
+	r'end'
+
+	t.type = 'END'
+
+	return t
+
+
+
+def t_INT(t):
+
+	r'[\-]?\d+'
+
+	t.value = int(t.value)
+
+	return t
+
+
+
+def t_CHAR(t):
+
+	r'"[^"]?"'
+
+	t.value = t.value[1:-1]
+
+	t.type = 'CHAR'
+
+	return t
+
+
+
+def t_STRING(t):
+
+	r'"[^"]*"'
+
+	t.value = t.value[1:-1]
+
+	t.type = 'STRING'
+
+	return t
+
+
+
+t_MINUS = r'\-'
+
+
+
+def t_error(t):
+
+	print(t)
+
+	print('Illegal Characters')
+
+	t.lexer.skip(1)
+
+
+
+lexer = lex.lex()
+        
+    \end{lstlisting}
+    
+    \section{Parser}
+    \begin{lstlisting}[language=python,firstnumber=1]
+        import ply.yacc as yacc
+import sys
+from lexer import tokens
+
+def p_Main(p):
+    "Main : Program"
+    parser.out = f"START\n{p[1]}STOP"
+
+def p_Main_Types_Program(p):
+    "Main : Types Program"
+    parser.out = f"{p[1]}START\n{p[2]}STOP"
+
+def p_Types(p):
+    "Types : type"
+    p[0] = f'{p[1]}'
+
+def p_Types_All(p):
+    "Types : Types type"
+    p[0] = f'{p[1]}{p[2]}'
+
+def p_Type_Int(p):
+    "type : TYPE_INT VAR_NAME"
+    if p[2] not in p.parser.register:
+        p.parser.register.update({p[2] : p.parser.pointer})
+        p[0] = f'PUSHI 0 \n'
+        p.parser.ints.append(p[2])
+        p.parser.pointer += 1
+    else:
+        print("Erro")
+        parser.sucess = False
+
+def p_Type_Int_Atr(p):
+    "type : TYPE_INT VAR_NAME EQUALS INT"
+    if p[2] not in p.parser.register:
+        p.parser.register.update({p[2] : p.parser.pointer})
+        p[0] = f'PUSHI {p[4]} \n'
+        p.parser.ints.append(p[2])
+        p.parser.pointer += 1
+    else:
+        print("Erro")
+        parser.sucess = False
+
+def p_Type_Int_Array(p):
+    "type : TYPE_ARRAY VAR_NAME LBRACK INT RBRACK"
+    if p[2] not in p.parser.registers:
+        p.parser.register.update({p[2] : (p.parser.pointer, int(p[4]))})
+        p[0] = f'PUSHI {p[4]} \n'
+        p.parser.ints.append(p[4])
+    else:
+        print("Erro")
+        parser.sucess = False
+
+def p_Program(p):
+    "Program : All"
+    p[0] = p[1]
+
+def p_Program_All(p):
+    "Program : Program All"
+    p[0] = f'{p[1]}{p[2]}'
+
+def p_Program_Print(p):
+    "All : Print"
+    p[0] = p[1]
+
+def p_If(p):
+    "All : IF cond THEN Program END"
+    p[0] = f'{p[2]}JZ l{p.parser.labels}\n{p[4]}l{p.parser.labels}: NOP\n'
+    p.parser.labels += 1
+
+def p_If_else(p):
+    "All : IF cond THEN Program ELSE Program END"
+    p[0] = f'{p[2]}JZ l{p.parser.labels}\n{p[4]}JUMP l{p.parser.labels}\nl{p.parser.labels}: NOP\n{p.parser.labels}: NOP\n'
+    p.parser.labels += 1
+
+def p_cond_lesser(p):
+    "cond : VAR_NAME LESSER VAR_NAME"
+    p[0] = f'PUSHG {p.parser.register[p[1]]}\nPUSHG{p.parser.register[p[3]]}\n INF\n'
+
+def p_cond_infeq(p):
+    "cond : VAR_NAME LESSER_EQUAL VAR_NAME"
+    p[0] = f'PUSHG{p.parser.register[p[1]]}\nPUSHG{p.parser.register[p[2]]}\n INFEQ\n' 
+
+def p_cond_sup(p):
+    "cond : VAR_NAME GREATER VAR_NAME"
+    p[0] = f'PUSHG{p.parser.register[p[1]]}\nPUSHG{p.parser.register[p[2]]}\n SUP\n'  
+
+def p_cond_sup(p):
+    "cond : VAR_NAME DOUBLE_EQUAL VAR_NAME"
+    p[0] = f'PUSHG{p.parser.register[p[1]]}\nPUSHG{p.parser.register[p[2]]}\n EQUAL\n'
+
+def p_cond_supeq(p):
+    "cond : VAR_NAME GREATER_EQUAL VAR_NAME"
+    p[0] = f'PUSHG{p.parser.register[p[1]]}\nPUSHG{p.parser.register[p[2]]}\n SUFEQ\n' 
+
+def p_cond_not(p):
+    "cond : VAR_NAME NOT_EQUAL VAR_NAME"
+    p[0] = f'PUSHG{p.parser.register[p[1]]}\nPUSHG{p.parser.register[p[2]]}\n NOT\n' 
+
+def p_Program_Atrib(p):
+    "All : Atrib"
+    p[0] = p[1]
+
+def p_Atrib_Array(p):
+    "Atrib  : VAR_NAME LBRACK Expr RBRACK"
+    if p[1] in p.parser.registers:
+        p[0] = f'PUSHGO\nPUSHI {p.parser.registers.get(p[1])}\nPADD\n{p[3]}STOREN\n'
+
+
+def p_Expression(p):
+    "Expr : VAR_NAME"
+    p[0] = f'PUSHG {p.parser.register[p[1]]}\n'
+
+def p_Expressions_PLUS(p):
+    "Expr : Expr PLUS Expr"
+    p[0] = f'{p[1]}{p[3]}ADD\n'
+
+def p_Expressions_MINUS(p):
+    "Expr : Expr MINUS Expr"
+    p[0] = f'{p[1]}{p[3]}SUB\n'
+
+def p_Expressions_DIVIDE(p):
+    "Expr : Expr DIVIDE Expr"
+    p[0] = f'{p[1]}{p[3]}DIV\n'
+
+def p_Expressions_MULTIPLY(p):
+    "Expr : Expr MULTIPLY Expr"
+    p[0] = f'{p[1]}{p[3]}MUL\n'
+
+def p_Expressions_MODULO(p):
+    "Expr : Expr MODULO Expr"
+    p[0] = f'{p[1]}{p[3]}MOD\n'
+
+def p_Atrib_Int(p):
+    "Atrib : VAR_NAME EQUALS Expr"
+    p[0] = f'{p[3]}STOREG {p.parser.register[p[1]]}\n'
+
+def p_dow(p):
+    "All : DO Program WHILE cond END"
+    p[0] = f'l{p.parser.labels}:{p[2]}\n{p[4]}NOT\nJZ l{p.parser.labels}'
+    p.parser.labels += 1
+
+def p_Print(p):
+    "Print : PRINT VAR_NAME"
+    p[0] = f'PUSHG {p.parser.register[p[2]]}\n WRITEI\n'
+
+def p_Print_Int(p):
+    "Print : PRINT INT"
+    p[0] = f'PUSHI {p[2]}\n WRITEI\n'
+
+
+#----------------------
+def p_error(p):
+    print('Syntax error: ', p)
+    parser.sucess = False
+
+#---------------------
+
+#inicio do parser
+parser = yacc.yacc()
+
+parser.sucess = True
+parser.register = {}
+parser.out = ""
+parser.pointer = 0
+parser.labels = 0
+parser.ints = []
+
+try:
+    if len(sys.argv)>1:
+        with open(sys.argv[1],'r') as file:
+            input = file.read()
+            parser.parse(input)
+            if parser.sucess:
+                if len(sys.argv) > 2:
+                    with open(sys.argv[2], 'w') as output:
+                        output.write(parser.out)
+                        print(f"Compilado com sucesso")
+                else:
+                    print(parser.out)
+    else:
+        for line in sys.stdin:
+            parser.sucess = True
+            parser.register = {}
+            parser.out = ""
+            parser.pointer = 0
+            parser.ints = []
+            parser.labels = 0
+            parser.parse(line)
+            if parser.sucess:
+                print(parser.out)
+            else:
+                print("Erro")
+except KeyboardInterrupt:
+    print()
+
+                        
+    \end{lstlisting}
+   
+	
+
+\end{document}
